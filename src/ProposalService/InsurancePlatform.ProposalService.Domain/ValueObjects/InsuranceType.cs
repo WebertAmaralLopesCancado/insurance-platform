@@ -6,6 +6,13 @@ namespace InsurancePlatform.ProposalService.Domain.ValueObjects;
 public sealed class InsuranceType : ValueObject
 {
     private const int MaxLength = 100;
+    private static readonly HashSet<string> AllowedValues = new(StringComparer.Ordinal)
+    {
+        "Life",
+        "Auto",
+        "Property",
+        "Health"
+    };
 
     public InsuranceType(string value)
     {
@@ -19,6 +26,11 @@ public sealed class InsuranceType : ValueObject
         if (normalizedValue.Length > MaxLength)
         {
             throw new DomainException($"Insurance type must not exceed {MaxLength} characters.");
+        }
+
+        if (!AllowedValues.Contains(normalizedValue))
+        {
+            throw new DomainException("Insurance type must be one of: Life, Auto, Property, Health.");
         }
 
         Value = normalizedValue;

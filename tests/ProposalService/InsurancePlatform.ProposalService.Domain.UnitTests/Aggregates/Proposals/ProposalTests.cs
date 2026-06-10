@@ -40,8 +40,11 @@ public sealed class ProposalTests
     {
         var proposal = CreateProposal();
 
-        proposal.DomainEvents.Should().ContainSingle()
-            .Which.Should().BeOfType<ProposalCreatedEvent>();
+        var domainEvent = proposal.DomainEvents.Should().ContainSingle().Subject;
+        domainEvent.Should().BeOfType<ProposalCreatedEvent>();
+
+        var proposalCreatedEvent = (ProposalCreatedEvent)domainEvent;
+        proposalCreatedEvent.OccurredOnUtc.Should().Be(proposal.CreatedAt);
     }
 
     [Fact]

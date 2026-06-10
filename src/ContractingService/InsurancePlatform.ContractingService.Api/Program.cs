@@ -1,7 +1,5 @@
 using InsurancePlatform.ContractingService.Api.Middlewares;
-using InsurancePlatform.ContractingService.Application.Common;
-using InsurancePlatform.ContractingService.Application.UseCases.CreateContract;
-using InsurancePlatform.ContractingService.Application.UseCases.GetContract;
+using InsurancePlatform.ContractingService.Application.DependencyInjection;
 using InsurancePlatform.ContractingService.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,10 +9,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
+builder.Services.AddContractingApplication();
 builder.Services.AddContractingInfrastructure(builder.Configuration);
-
-builder.Services.AddScoped<ICommandHandler<CreateContractCommand, CreateContractResponse>, CreateContractCommandHandler>();
-builder.Services.AddScoped<IQueryHandler<GetContractQuery, ContractResponse>, GetContractQueryHandler>();
 
 var app = builder.Build();
 

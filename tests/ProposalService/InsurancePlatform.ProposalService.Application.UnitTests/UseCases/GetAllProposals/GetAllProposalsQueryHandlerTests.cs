@@ -16,7 +16,7 @@ public sealed class GetAllProposalsQueryHandlerTests
         var proposals = new[]
         {
             CreateProposal("John Doe", "Auto", 15000m),
-            CreateProposal("Jane Doe", "Home", 250000m)
+            CreateProposal("Jane Doe", "Property", 250000m)
         };
         var pagedResult = new PagedResult<Proposal>(proposals, pageNumber: 2, pageSize: 2, totalItems: 5);
         var repository = new Mock<IProposalRepository>();
@@ -37,7 +37,7 @@ public sealed class GetAllProposalsQueryHandlerTests
         var proposals = new[]
         {
             CreateProposal("John Doe", "Auto", 15000m),
-            CreateProposal("Jane Doe", "Home", 250000m)
+            CreateProposal("Jane Doe", "Property", 250000m)
         };
         var pagedResult = new PagedResult<Proposal>(proposals, pageNumber: 2, pageSize: 2, totalItems: 5);
         var repository = new Mock<IProposalRepository>();

@@ -50,6 +50,7 @@ public sealed class ContractTests
         contractCreatedEvent.ContractId.Should().Be(contract.Id);
         contractCreatedEvent.ProposalId.Should().Be(proposalId);
         contractCreatedEvent.ContractedAt.Should().Be(contract.ContractedAt);
+        contractCreatedEvent.OccurredOnUtc.Should().Be(contract.ContractedAt);
     }
 
     [Fact]

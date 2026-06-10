@@ -28,14 +28,14 @@ public sealed class Contract : AggregateRoot<Guid>
             throw new DomainException("Proposal id is required.");
         }
 
-        var contractedAt = DateTime.UtcNow;
-        var contract = new Contract(Guid.NewGuid(), proposalId, contractedAt);
+        var occurredOnUtc = DateTime.UtcNow;
+        var contract = new Contract(Guid.NewGuid(), proposalId, occurredOnUtc);
 
         contract.AddDomainEvent(new ContractCreatedEvent(
             contract.Id,
             contract.ProposalId,
             contract.ContractedAt,
-            DateTime.UtcNow));
+            occurredOnUtc));
 
         return contract;
     }

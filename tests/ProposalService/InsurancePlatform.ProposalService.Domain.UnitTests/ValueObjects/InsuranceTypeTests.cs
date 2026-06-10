@@ -39,4 +39,12 @@ public sealed class InsuranceTypeTests
 
         act.Should().Throw<DomainException>();
     }
+
+    [Fact]
+    public void Constructor_ShouldRejectInvalidValue()
+    {
+        var act = () => new InsuranceType("Travel");
+
+        act.Should().Throw<DomainException>();
+    }
 }

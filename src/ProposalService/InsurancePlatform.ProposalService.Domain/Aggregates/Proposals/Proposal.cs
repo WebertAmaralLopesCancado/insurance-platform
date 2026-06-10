@@ -41,23 +41,36 @@ public sealed class Proposal : AggregateRoot<Guid>
         InsuranceType insuranceType,
         CoverageAmount coverageAmount)
     {
-        ArgumentNullException.ThrowIfNull(customerName);
-        ArgumentNullException.ThrowIfNull(insuranceType);
-        ArgumentNullException.ThrowIfNull(coverageAmount);
+        if (customerName is null)
+        {
+            throw new DomainException("Customer name is required.");
+        }
+
+        if (insuranceType is null)
+        {
+            throw new DomainException("Insurance type is required.");
+        }
+
+        if (coverageAmount is null)
+        {
+            throw new DomainException("Coverage amount is required.");
+        }
+
+        var occurredOnUtc = DateTime.UtcNow;
 
         var proposal = new Proposal(
             Guid.NewGuid(),
             customerName,
             insuranceType,
             coverageAmount,
-            DateTime.UtcNow);
+            occurredOnUtc);
 
         proposal.AddDomainEvent(new ProposalCreatedEvent(
             proposal.Id,
             proposal.CustomerName.Value,
             proposal.InsuranceType.Value,
             proposal.CoverageAmount.Value,
-            DateTime.UtcNow));
+            occurredOnUtc));
 
         return proposal;
     }
