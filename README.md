@@ -241,7 +241,8 @@ insurance-platform/
 │
 ├── docs/
 │   ├── sdd/                   ← Software Design Documents
-│   └── adrs/                  ← Architecture Decision Records
+│   ├── adrs/                  ← Architecture Decision Records (11 ADRs)
+│   └── diagrams/              ← Diagramas Mermaid (5 diagramas)
 │
 └── docker/
     ├── docker-compose.yml
@@ -549,21 +550,21 @@ Todos os serviços possuem um `ExceptionHandlerMiddleware` global que intercepta
 
 ## Decisões Arquiteturais
 
-A documentação completa dos ADRs está em [`docs/sdd/05-decisoes-arquiteturais.md`](docs/sdd/05-decisoes-arquiteturais.md).
+Cada decisão arquitetural possui seu próprio arquivo em [`docs/adrs/`](docs/adrs/), seguindo o formato ADR com Status, Contexto, Decisão, Alternativas e Consequências.
 
 | ADR | Decisão | Justificativa |
 |-----|---------|---------------|
-| ADR-001 | Modelo de Domínio Rico | Invariantes garantidas no agregado, sem lógica de negócio vazando para camadas externas |
-| ADR-002 | Value Objects | Validação centralizada, igualdade semântica, fail-fast na construção |
-| ADR-003 | Domain Events | Extensibilidade de efeitos colaterais sem acoplamento ao fluxo principal |
-| ADR-004 | Ports and Adapters Explícitos | Fronteiras claras, substituição de implementações sem impacto no domínio |
-| ADR-005 | Anti-Corruption Layer | Bounded contexts isolados e evolutivos de forma independente |
-| ADR-006 | Casos de Uso por Intenção | SRP aplicado: `ApproveProposal` e `RejectProposal` em vez de `UpdateProposalStatus` |
-| ADR-007 | Paginação em Listagens | Desempenho previsível em produção independente do volume de dados |
-| ADR-008 | Tratamento de Erros Centralizado | Consistência nas respostas HTTP, controllers sem try/catch |
-| ADR-009 | Pirâmide de Testes | Cobertura em três níveis: domínio puro, application com mocks e integração com banco real |
-| ADR-010 | FluentValidation | Separação entre validação de formato (Application) e invariante de negócio (Domain) |
-| ADR-011 | SeedWork por Microsserviço | Independência total entre serviços, sem acoplamento via projeto compartilhado |
+| [ADR-001](docs/adrs/ADR-001-modelo-de-dominio-rico.md) | Modelo de Domínio Rico | Invariantes garantidas no agregado, sem lógica de negócio vazando para camadas externas |
+| [ADR-002](docs/adrs/ADR-002-value-objects.md) | Value Objects | Validação centralizada, igualdade semântica, fail-fast na construção |
+| [ADR-003](docs/adrs/ADR-003-domain-events.md) | Domain Events | Extensibilidade de efeitos colaterais sem acoplamento ao fluxo principal |
+| [ADR-004](docs/adrs/ADR-004-ports-and-adapters.md) | Ports and Adapters Explícitos | Fronteiras claras, substituição de implementações sem impacto no domínio |
+| [ADR-005](docs/adrs/ADR-005-anti-corruption-layer.md) | Anti-Corruption Layer | Bounded contexts isolados e evolutivos de forma independente |
+| [ADR-006](docs/adrs/ADR-006-separacao-de-casos-de-uso.md) | Casos de Uso por Intenção | SRP aplicado: `ApproveProposal` e `RejectProposal` em vez de `UpdateProposalStatus` |
+| [ADR-007](docs/adrs/ADR-007-paginacao.md) | Paginação em Listagens | Desempenho previsível em produção independente do volume de dados |
+| [ADR-008](docs/adrs/ADR-008-tratamento-de-erros.md) | Tratamento de Erros Centralizado | Consistência nas respostas HTTP, controllers sem try/catch |
+| [ADR-009](docs/adrs/ADR-009-estrategia-de-testes.md) | Pirâmide de Testes | Cobertura em três níveis: domínio puro, application com mocks e integração com banco real |
+| [ADR-010](docs/adrs/ADR-010-fluent-validation.md) | FluentValidation | Separação entre validação de formato (Application) e invariante de negócio (Domain) |
+| [ADR-011](docs/adrs/ADR-011-seedwork-por-microsservico.md) | SeedWork por Microsserviço | Independência total entre serviços, sem acoplamento via projeto compartilhado |
 
 ---
 
@@ -620,13 +621,41 @@ A solução está preparada arquiteturalmente para as seguintes evoluções, que
 
 ## Documentação Técnica
 
+### Software Design Documents
+
 | Documento | Descrição |
 |-----------|-----------|
 | [`docs/sdd/01-visao-geral.md`](docs/sdd/01-visao-geral.md) | Visão geral do domínio, regras de negócio e requisitos |
 | [`docs/sdd/02-ddd-e-bounded-contexts.md`](docs/sdd/02-ddd-e-bounded-contexts.md) | Bounded Contexts, agregados, Value Objects e casos de uso |
 | [`docs/sdd/03-arquitetura-hexagonal.md`](docs/sdd/03-arquitetura-hexagonal.md) | Ports, Adapters, fluxos e mapa de localização de artefatos |
 | [`docs/sdd/04-modelagem-do-dominio.md`](docs/sdd/04-modelagem-do-dominio.md) | Modelagem detalhada, invariantes e estratégia de erros |
-| [`docs/sdd/05-decisoes-arquiteturais.md`](docs/sdd/05-decisoes-arquiteturais.md) | Architecture Decision Records (ADRs) |
+| [`docs/sdd/05-decisoes-arquiteturais.md`](docs/sdd/05-decisoes-arquiteturais.md) | Sumário das decisões arquiteturais |
+
+### Architecture Decision Records
+
+| ADR | Arquivo |
+|-----|---------|
+| ADR-001 | [`docs/adrs/ADR-001-modelo-de-dominio-rico.md`](docs/adrs/ADR-001-modelo-de-dominio-rico.md) |
+| ADR-002 | [`docs/adrs/ADR-002-value-objects.md`](docs/adrs/ADR-002-value-objects.md) |
+| ADR-003 | [`docs/adrs/ADR-003-domain-events.md`](docs/adrs/ADR-003-domain-events.md) |
+| ADR-004 | [`docs/adrs/ADR-004-ports-and-adapters.md`](docs/adrs/ADR-004-ports-and-adapters.md) |
+| ADR-005 | [`docs/adrs/ADR-005-anti-corruption-layer.md`](docs/adrs/ADR-005-anti-corruption-layer.md) |
+| ADR-006 | [`docs/adrs/ADR-006-separacao-de-casos-de-uso.md`](docs/adrs/ADR-006-separacao-de-casos-de-uso.md) |
+| ADR-007 | [`docs/adrs/ADR-007-paginacao.md`](docs/adrs/ADR-007-paginacao.md) |
+| ADR-008 | [`docs/adrs/ADR-008-tratamento-de-erros.md`](docs/adrs/ADR-008-tratamento-de-erros.md) |
+| ADR-009 | [`docs/adrs/ADR-009-estrategia-de-testes.md`](docs/adrs/ADR-009-estrategia-de-testes.md) |
+| ADR-010 | [`docs/adrs/ADR-010-fluent-validation.md`](docs/adrs/ADR-010-fluent-validation.md) |
+| ADR-011 | [`docs/adrs/ADR-011-seedwork-por-microsservico.md`](docs/adrs/ADR-011-seedwork-por-microsservico.md) |
+
+### Diagramas
+
+| Diagrama | Arquivo |
+|----------|---------|
+| Contexto Geral | [`docs/diagrams/01-contexto-geral.md`](docs/diagrams/01-contexto-geral.md) |
+| Arquitetura Hexagonal | [`docs/diagrams/02-arquitetura-hexagonal.md`](docs/diagrams/02-arquitetura-hexagonal.md) |
+| Fluxo de Negócio | [`docs/diagrams/03-fluxo-de-negocio.md`](docs/diagrams/03-fluxo-de-negocio.md) |
+| ProposalService | [`docs/diagrams/04-proposal-service.md`](docs/diagrams/04-proposal-service.md) |
+| ContractingService | [`docs/diagrams/05-contracting-service.md`](docs/diagrams/05-contracting-service.md) |
 
 ---
 
