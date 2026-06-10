@@ -48,7 +48,7 @@ public sealed class ProposalsController : ControllerBase
 
         var response = await _createProposalHandler.HandleAsync(command, cancellationToken);
 
-        return CreatedAtAction(nameof(GetByIdAsync), new { id = response.Id }, response);
+        return Created($"/api/proposals/{response.Id}", response);
     }
 
     [HttpGet("{id:guid}")]

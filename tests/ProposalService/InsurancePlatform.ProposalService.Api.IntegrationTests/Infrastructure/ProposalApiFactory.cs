@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace InsurancePlatform.ProposalService.Api.IntegrationTests.Infrastructure;
 
@@ -28,6 +29,8 @@ public sealed class ProposalApiFactory : WebApplicationFactory<Program>, IAsyncL
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseContentRoot(ResolveApiContentRoot());
+
         builder.ConfigureAppConfiguration((_, configurationBuilder) =>
         {
             var configuration = new Dictionary<string, string?>
@@ -37,5 +40,36 @@ public sealed class ProposalApiFactory : WebApplicationFactory<Program>, IAsyncL
 
             configurationBuilder.AddInMemoryCollection(configuration);
         });
+
+        builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<DbContextOptions<ProposalDbContext>>();
+
+            services.AddDbContext<ProposalDbContext>(options =>
+            {
+                options.UseNpgsql(_postgresSqlContainer.ConnectionString);
+            });
+        });
+    }
+
+    private static string ResolveApiContentRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "insurance-platform.sln")))
+        {
+            directory = directory.Parent;
+        }
+
+        if (directory is null)
+        {
+            throw new DirectoryNotFoundException("Could not locate the solution root from the test base directory.");
+        }
+
+        return Path.Combine(
+            directory.FullName,
+            "src",
+            "ProposalService",
+            "InsurancePlatform.ProposalService.Api");
     }
 }

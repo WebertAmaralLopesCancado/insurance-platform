@@ -35,7 +35,7 @@ public sealed class ContractsController : ControllerBase
             new CreateContractCommand(request.ProposalId),
             cancellationToken);
 
-        return CreatedAtAction(nameof(GetByIdAsync), new { id = response.Id }, response);
+        return Created($"/api/contracts/{response.Id}", response);
     }
 
     [HttpGet("{id:guid}")]

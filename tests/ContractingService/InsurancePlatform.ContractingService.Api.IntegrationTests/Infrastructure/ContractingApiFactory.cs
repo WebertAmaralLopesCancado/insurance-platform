@@ -42,6 +42,8 @@ public sealed class ContractingApiFactory : WebApplicationFactory<Program>, IAsy
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseContentRoot(ResolveApiContentRoot());
+
         builder.ConfigureAppConfiguration((_, configurationBuilder) =>
         {
             var configuration = new Dictionary<string, string?>
@@ -55,6 +57,12 @@ public sealed class ContractingApiFactory : WebApplicationFactory<Program>, IAsy
 
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<DbContextOptions<ContractingDbContext>>();
+            services.AddDbContext<ContractingDbContext>(options =>
+            {
+                options.UseNpgsql(_postgresSqlContainer.ConnectionString);
+            });
+
             services.RemoveAll<IProposalServiceGateway>();
             services.AddSingleton<IProposalServiceGateway>(new StubProposalServiceGateway(_proposals));
         });
@@ -76,5 +84,26 @@ public sealed class ContractingApiFactory : WebApplicationFactory<Program>, IAsy
             _proposals.TryGetValue(proposalId, out var proposal);
             return Task.FromResult(proposal);
         }
+    }
+
+    private static string ResolveApiContentRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "insurance-platform.sln")))
+        {
+            directory = directory.Parent;
+        }
+
+        if (directory is null)
+        {
+            throw new DirectoryNotFoundException("Could not locate the solution root from the test base directory.");
+        }
+
+        return Path.Combine(
+            directory.FullName,
+            "src",
+            "ContractingService",
+            "InsurancePlatform.ContractingService.Api");
     }
 }
