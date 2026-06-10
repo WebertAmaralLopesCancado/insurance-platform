@@ -1,0 +1,12 @@
+.vs/
+.git/
+bin/
+obj/
+**/bin/
+**/obj/
+TestResults/
+.vscode/
+.idea/
+*.user
+*.suo
+*.vsidx

@@ -1,0 +1,59 @@
+services:
+  proposal-api:
+    build:
+      context: .
+      dockerfile: docker/ProposalService.Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=proposal-db;Port=5432;Database=proposal_db;Username=postgres;Password=postgres
+    depends_on:
+      proposal-db:
+        condition: service_healthy
+
+  contracting-api:
+    build:
+      context: .
+      dockerfile: docker/ContractingService.Dockerfile
+    ports:
+      - "5002:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=contracting-db;Port=5432;Database=contracting_db;Username=postgres;Password=postgres
+      ProposalServiceGateway__BaseUrl: http://proposal-api:8080
+    depends_on:
+      contracting-db:
+        condition: service_healthy
+      proposal-api:
+        condition: service_started
+
+  proposal-db:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: proposal_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d proposal_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  contracting-db:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: contracting_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d contracting_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
