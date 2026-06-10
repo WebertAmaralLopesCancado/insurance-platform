@@ -17,6 +17,7 @@ public sealed class ContractsApiTests : IClassFixture<ContractingApiFactory>
         _client = factory.CreateClient();
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task PostContracts_ShouldCreateContractWhenProposalIsApproved()
     {
@@ -28,6 +29,7 @@ public sealed class ContractsApiTests : IClassFixture<ContractingApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task PostContracts_ShouldReturnUnprocessableEntityWhenProposalIsRejected()
     {
@@ -39,6 +41,7 @@ public sealed class ContractsApiTests : IClassFixture<ContractingApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task PostContracts_ShouldReturnNotFoundWhenProposalDoesNotExist()
     {
@@ -50,6 +53,7 @@ public sealed class ContractsApiTests : IClassFixture<ContractingApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task PostContracts_ShouldReturnConflictWhenContractAlreadyExistsForProposal()
     {
@@ -64,6 +68,7 @@ public sealed class ContractsApiTests : IClassFixture<ContractingApiFactory>
         secondResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task GetContractById_ShouldReturnExistingContract()
     {
@@ -80,6 +85,7 @@ public sealed class ContractsApiTests : IClassFixture<ContractingApiFactory>
         contract.RootElement.GetProperty("proposalId").GetGuid().Should().Be(proposalId);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task GetContractById_ShouldReturnNotFoundWhenContractDoesNotExist()
     {

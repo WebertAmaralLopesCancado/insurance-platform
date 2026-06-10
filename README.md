@@ -337,6 +337,24 @@ dotnet run --project src/ContractingService/InsurancePlatform.ContractingService
 
 O fluxo completo de contratação envolve os dois microsserviços com validação cross-context via ACL.
 
+### Visão Simplificada
+
+```mermaid
+flowchart LR
+    A([Início]) --> B[Criar Proposta]
+    B --> C[Aprovar Proposta]
+    C --> D[Gerar Contrato]
+    D --> E([Fim])
+
+    style A fill:#e8f4fd,stroke:#2196F3
+    style B fill:#fff3e0,stroke:#FF9800
+    style C fill:#e8f5e9,stroke:#4CAF50
+    style D fill:#f3e5f5,stroke:#9C27B0
+    style E fill:#e8f4fd,stroke:#2196F3
+```
+
+### Fluxo Detalhado entre Microsserviços
+
 ```mermaid
 sequenceDiagram
     actor Cliente
@@ -436,18 +454,68 @@ Exemplos de cobertura:
 - `POST /contracts` retorna `409 Conflict` quando proposta já contratada
 - `GET /contracts/{id}` para contrato inexistente retorna `404 Not Found`
 
-### Executando os testes
+---
+
+## Execução dos Testes
+
+### Testes Unitários
+
+Os testes unitários não possuem dependências externas e podem ser executados diretamente pelo **Visual Studio**, pelo **Rider** ou via linha de comando em qualquer sistema operacional.
 
 ```bash
-# Todos os testes
-dotnet test
+# Todos os testes unitários de domínio e aplicação
+dotnet test tests/ProposalService/InsurancePlatform.ProposalService.Domain.UnitTests
+dotnet test tests/ProposalService/InsurancePlatform.ProposalService.Application.UnitTests
+dotnet test tests/ContractingService/InsurancePlatform.ContractingService.Domain.UnitTests
+dotnet test tests/ContractingService/InsurancePlatform.ContractingService.Application.UnitTests
 
-# Apenas testes unitários (sem Docker necessário)
-dotnet test --filter "Category!=Integration"
-
-# Apenas testes de integração (requer Docker)
-dotnet test --filter "Category=Integration"
+# Ou todos de uma vez
+dotnet test --filter "FullyQualifiedName!~IntegrationTests"
 ```
+
+### Testes de Integração
+
+Os testes de integração utilizam **Testcontainers** para provisionar automaticamente um container **PostgreSQL** real durante a execução. Por esse motivo, exigem o **Docker** ativo na máquina.
+
+> **Recomendação:** executar os testes de integração preferencialmente via **WSL (Windows Subsystem for Linux)** com o Docker Desktop configurado para integração com WSL 2. Isso evita problemas de permissão de socket e garante a comunicação correta entre o processo .NET e o daemon Docker.
+
+```bash
+# ProposalService — integração
+dotnet test ./tests/ProposalService/InsurancePlatform.ProposalService.Api.IntegrationTests
+
+# ContractingService — integração
+dotnet test ./tests/ContractingService/InsurancePlatform.ContractingService.Api.IntegrationTests
+```
+
+O Testcontainers gerencia o ciclo de vida do container automaticamente: provisiona antes dos testes, aplica as migrations via EF Core e destrói o container ao final da execução. Nenhuma configuração manual de banco de dados é necessária.
+
+---
+
+## Qualidade da Solução
+
+| Indicador | Valor |
+|-----------|-------|
+| Testes unitários | **48** |
+| Testes de integração | **11** |
+| Total de testes automatizados | **59** |
+| Projetos de teste | 6 |
+| Projetos de produção | 8 |
+| Microsserviços | 2 |
+| Bounded Contexts | 2 |
+
+**Padrões e práticas aplicadas:**
+
+| Prática | Aplicação |
+|---------|-----------|
+| Arquitetura Hexagonal | Ports and Adapters em todos os microsserviços |
+| Domain-Driven Design | Modelo rico, Aggregate Roots, Value Objects, Domain Events |
+| SOLID | Aplicado em todas as camadas — handlers, repositórios, gateways |
+| CQRS | Commands e Queries separados por intenção |
+| Domain Events | 4 eventos registrados pelos agregados |
+| Anti-Corruption Layer | `IProposalServiceGateway` + `ProposalSnapshot` isolando os contextos |
+| Persistência | EF Core com Fluent API, migrations versionadas, mapeamento de Value Objects via `OwnsOne` |
+| Containerização | Docker + Docker Compose para execução local completa |
+| Banco de dados | PostgreSQL com índice único em `proposal_id` para garantir unicidade de contratos |
 
 ---
 
@@ -499,6 +567,40 @@ A documentação completa dos ADRs está em [`docs/sdd/05-decisoes-arquiteturais
 
 ---
 
+## Diferenciais Arquiteturais
+
+Esta solução foi desenvolvida com atenção explícita aos diferenciais que distinguem uma entrega sênior de uma implementação funcional comum.
+
+### Bounded Contexts independentes
+
+Os dois microsserviços não compartilham nenhum projeto, biblioteca, tipo ou namespace. Cada serviço possui seu próprio `Domain`, `Application`, `Infrastructure`, banco de dados e pipeline de migrations. Podem ser deployados, versionados e escalados de forma completamente independente.
+
+### Modelo Rico de Domínio
+
+Os agregados `Proposal` e `Contract` encapsulam comportamento e protegem invariantes. O estado interno nunca é modificado diretamente — toda transição passa por métodos de negócio do próprio agregado (`Approve()`, `Reject()`, `Create()`). Construtores privados e factory methods garantem que objetos inválidos não possam ser instanciados.
+
+### Value Objects com validação fail-fast
+
+`CustomerName`, `InsuranceType` e `CoverageAmount` encapsulam regras de validação e semântica de negócio. Uma string vazia para `CustomerName` ou um valor zero para `CoverageAmount` falham na construção do Value Object, antes de qualquer lógica de persistência ser acionada.
+
+### Domain Events acoplados ao agregado
+
+Os eventos são registrados pelo próprio agregado no momento da operação, sem dependência de serviços externos. A coleção `DomainEvents` no `AggregateRoot<TId>` armazena os eventos até a publicação pós-commit, viabilizando integração futura com mensageria sem necessidade de refatoração dos agregados.
+
+### Separação de responsabilidades por intenção
+
+Em vez de um genérico `UpdateProposalStatus`, a solução expõe `ApproveProposal` e `RejectProposal` como casos de uso separados, cada um com seu próprio handler, command e endpoint. Isso aplica SRP de forma explícita e cria APIs semanticamente corretas.
+
+### Alta coesão e baixo acoplamento
+
+Cada pasta de caso de uso (`UseCases/CreateProposal/`, `UseCases/ApproveProposal/`, etc.) contém exclusivamente os artefatos do seu próprio fluxo: command, handler e response. Não há classe que agregue múltiplos casos de uso ou dependa de handlers irmãos.
+
+### Testabilidade por design
+
+Todas as dependências externas são injetadas via interface. Não há acesso direto a banco de dados, HTTP ou serviços externos nas camadas `Domain` e `Application`. Os testes unitários validam comportamento de negócio puro sem infraestrutura; os testes de integração validam o stack completo com banco real via Testcontainers.
+
+---
+
 ## Melhorias Futuras
 
 A solução está preparada arquiteturalmente para as seguintes evoluções, que não foram implementadas por estarem fora do escopo da avaliação:
@@ -530,6 +632,6 @@ A solução está preparada arquiteturalmente para as seguintes evoluções, que
 
 ## Autor
 
-**Webert Lopes Cançado**
+**Webert Amaral Lopes Cançado**
 
-Desenvolvedor Back-End .NET Sênior
+Engenheiro de Software .NET

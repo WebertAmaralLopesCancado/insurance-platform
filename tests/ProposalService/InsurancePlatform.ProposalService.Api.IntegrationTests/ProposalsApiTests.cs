@@ -15,6 +15,7 @@ public sealed class ProposalsApiTests : IClassFixture<ProposalApiFactory>
         _client = factory.CreateClient();
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task PostProposals_ShouldCreateProposal()
     {
@@ -23,6 +24,7 @@ public sealed class ProposalsApiTests : IClassFixture<ProposalApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task GetProposalById_ShouldReturnCreatedProposal()
     {
@@ -37,6 +39,7 @@ public sealed class ProposalsApiTests : IClassFixture<ProposalApiFactory>
         proposal.RootElement.GetProperty("status").GetString().Should().Be("UnderAnalysis");
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task PatchApproveProposal_ShouldApproveProposal()
     {
@@ -47,6 +50,7 @@ public sealed class ProposalsApiTests : IClassFixture<ProposalApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task PatchRejectProposal_ShouldRejectProposal()
     {
@@ -57,6 +61,7 @@ public sealed class ProposalsApiTests : IClassFixture<ProposalApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    [Trait("Category", "Integration")]
     [Fact]
     public async Task GetProposalById_ShouldReturnNotFoundWhenProposalDoesNotExist()
     {
