@@ -9,6 +9,7 @@ HEALTH_TIMEOUT_SECONDS="${HEALTH_TIMEOUT_SECONDS:-90}"
 
 COMPOSE_CMD=()
 STARTED_COMPOSE=0
+HAS_JQ=0
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%H:%M:%S')" "$*"
@@ -21,6 +22,15 @@ fail() {
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "Comando obrigatorio nao encontrado: $1"
+}
+
+detect_jq() {
+  if command -v jq >/dev/null 2>&1; then
+    HAS_JQ=1
+    return
+  fi
+
+  printf '[WARN] jq não encontrado, usando parser alternativo.\n' >&2
 }
 
 detect_compose() {
@@ -123,15 +133,47 @@ request_no_content() {
   rm -f "${response_file}"
 }
 
+extract_id() {
+  local json="$1"
+
+  if [[ "${HAS_JQ}" -eq 1 ]]; then
+    printf '%s' "${json}" | jq -r '.id'
+    return
+  fi
+
+  printf '%s' "${json}" \
+    | tr -d '\n\r' \
+    | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+}
+
+build_contract_payload() {
+  local proposal_id="$1"
+
+  if [[ "${HAS_JQ}" -eq 1 ]]; then
+    jq -n --arg proposalId "${proposal_id}" '{proposalId: $proposalId}'
+    return
+  fi
+
+  printf '{"proposalId":"%s"}' "${proposal_id}"
+}
+
+format_json() {
+  local json="$1"
+
+  if [[ "${HAS_JQ}" -eq 1 ]]; then
+    printf '%s' "${json}" | jq .
+    return
+  fi
+
+  printf '%s\n' "${json}"
+}
+
 main() {
   require_command dotnet
   require_command docker
   require_command curl
 
-  if ! command -v jq >/dev/null 2>&1; then
-    fail "jq nao encontrado. Instale com 'sudo apt-get update && sudo apt-get install -y jq' no Ubuntu/WSL."
-  fi
-
+  detect_jq
   detect_compose
   trap cleanup EXIT
 
@@ -158,7 +200,7 @@ main() {
     "coverageAmount": 15000
   }'
   proposal_response="$(request_json POST "${PROPOSAL_API_URL}/api/proposals" "${proposal_payload}" 201)"
-  proposal_id="$(printf '%s' "${proposal_response}" | jq -r '.id')"
+  proposal_id="$(extract_id "${proposal_response}")"
 
   [[ -n "${proposal_id}" && "${proposal_id}" != "null" ]] || fail "Nao foi possivel extrair proposalId da resposta: ${proposal_response}"
 
@@ -166,9 +208,9 @@ main() {
   request_no_content PATCH "${PROPOSAL_API_URL}/api/proposals/${proposal_id}/approve" 204
 
   log "Criando contrato para proposta ${proposal_id}"
-  contract_payload="$(jq -n --arg proposalId "${proposal_id}" '{proposalId: $proposalId}')"
+  contract_payload="$(build_contract_payload "${proposal_id}")"
   contract_response="$(request_json POST "${CONTRACTING_API_URL}/api/contracts" "${contract_payload}" 201)"
-  contract_id="$(printf '%s' "${contract_response}" | jq -r '.id')"
+  contract_id="$(extract_id "${contract_response}")"
 
   [[ -n "${contract_id}" && "${contract_id}" != "null" ]] || fail "Nao foi possivel extrair contractId da resposta: ${contract_response}"
 
@@ -188,7 +230,7 @@ Proposta criada: ${proposal_id}
 Proposta aprovada: OK
 Contrato criado: ${contract_id}
 Contrato consultado:
-$(printf '%s' "${contract_lookup_response}" | jq .)
+$(format_json "${contract_lookup_response}")
 REPORT
 }
 
