@@ -334,6 +334,85 @@ dotnet run --project src/ContractingService/InsurancePlatform.ContractingService
 
 ---
 
+## Harness de Validação
+
+A solução possui um Harness automatizado para validação completa do ambiente local e do fluxo principal de negócio. Ele consolida em uma única execução as etapas necessárias para verificar build, testes, infraestrutura Docker, disponibilidade das APIs e integração funcional entre `ProposalService` e `ContractingService`.
+
+O Harness executa:
+
+- Restore da solução
+- Build da solução
+- Testes unitários
+- Docker Compose
+- Health Checks
+- Fluxo completo de negócio
+- Teardown automático
+
+### Como Executar o Harness
+
+Execute a partir da raiz do repositório:
+
+```bash
+chmod +x harness/run-harness.sh
+./harness/run-harness.sh
+```
+
+Pré-requisitos:
+
+- Docker
+- Docker Compose
+- jq recomendado para parsing JSON preferencial
+- .NET 8 SDK
+- WSL/Linux recomendado
+
+Instalação do `jq` no Ubuntu/WSL:
+
+```bash
+sudo apt update
+sudo apt install -y jq
+```
+
+> Observação: o Harness detecta automaticamente a presença do `jq`. Quando ele não está disponível, o script exibe um aviso e utiliza um parser alternativo baseado em ferramentas de shell.
+
+### Fluxo Validado pelo Harness
+
+```mermaid
+flowchart TD
+
+A[Build]
+--> B[Testes Unitários]
+
+B --> C[Docker Compose]
+
+C --> D[Health Check ProposalService]
+
+D --> E[Health Check ContractingService]
+
+E --> F[Criar Proposta]
+
+F --> G[Aprovar Proposta]
+
+G --> H[Criar Contrato]
+
+H --> I[Consultar Contrato]
+
+I --> J[Teardown]
+```
+
+## Resultado Esperado
+
+Ao final da execução do Harness, o resultado esperado é:
+
+```text
+Build: OK
+Testes Unitários: OK
+Docker Compose: OK
+Health Checks: OK
+Fluxo de Negócio: OK
+```
+
+---
+
 ## Fluxo de Negócio
 
 O fluxo completo de contratação envolve os dois microsserviços com validação cross-context via ACL.
@@ -503,6 +582,9 @@ O Testcontainers gerencia o ciclo de vida do container automaticamente: provisio
 | Projetos de produção | 8 |
 | Microsserviços | 2 |
 | Bounded Contexts | 2 |
+| Harness End-to-End | Implementado |
+| Validação automatizada do fluxo principal | Implementada |
+| Validação automatizada de infraestrutura | Implementada |
 
 **Padrões e práticas aplicadas:**
 
@@ -517,6 +599,9 @@ O Testcontainers gerencia o ciclo de vida do container automaticamente: provisio
 | Persistência | EF Core com Fluent API, migrations versionadas, mapeamento de Value Objects via `OwnsOne` |
 | Containerização | Docker + Docker Compose para execução local completa |
 | Banco de dados | PostgreSQL com índice único em `proposal_id` para garantir unicidade de contratos |
+| Harness End-to-End | Validação automatizada de build, testes, Docker, health checks e fluxo principal |
+| Validação automatizada do fluxo principal | Criação de proposta, aprovação, criação de contrato e consulta do contrato |
+| Validação automatizada de infraestrutura | Subida do Docker Compose, health checks das APIs e teardown automático |
 
 ---
 
@@ -565,6 +650,21 @@ Cada decisão arquitetural possui seu próprio arquivo em [`docs/adrs/`](docs/ad
 | [ADR-009](docs/adrs/ADR-009-estrategia-de-testes.md) | Pirâmide de Testes | Cobertura em três níveis: domínio puro, application com mocks e integração com banco real |
 | [ADR-010](docs/adrs/ADR-010-fluent-validation.md) | FluentValidation | Separação entre validação de formato (Application) e invariante de negócio (Domain) |
 | [ADR-011](docs/adrs/ADR-011-seedwork-por-microsservico.md) | SeedWork por Microsserviço | Independência total entre serviços, sem acoplamento via projeto compartilhado |
+
+---
+
+## Diferenciais Técnicos
+
+- Arquitetura Hexagonal
+- DDD
+- CQRS
+- Domain Events
+- Anti-Corruption Layer
+- Docker
+- Testes Unitários
+- Testes de Integração
+- Harness End-to-End
+- Documentação Arquitetural (SDD + ADR + Diagramas)
 
 ---
 
