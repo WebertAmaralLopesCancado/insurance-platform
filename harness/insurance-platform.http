@@ -1,0 +1,36 @@
+@proposalApi = http://localhost:5001
+@contractingApi = http://localhost:5002
+@proposalId = replace-with-created-proposal-id
+@contractId = replace-with-created-contract-id
+
+### Proposal API health
+GET {{proposalApi}}/health
+
+### Contracting API health
+GET {{contractingApi}}/health
+
+### Create proposal
+# Copy the "id" value from the response into @proposalId.
+POST {{proposalApi}}/api/proposals
+Content-Type: application/json
+
+{
+  "customerName": "Maria Silva",
+  "insuranceType": "Auto",
+  "coverageAmount": 15000
+}
+
+### Approve proposal
+PATCH {{proposalApi}}/api/proposals/{{proposalId}}/approve
+
+### Create contract
+# Copy the "id" value from the response into @contractId.
+POST {{contractingApi}}/api/contracts
+Content-Type: application/json
+
+{
+  "proposalId": "{{proposalId}}"
+}
+
+### Get contract
+GET {{contractingApi}}/api/contracts/{{contractId}}
